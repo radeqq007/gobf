@@ -120,6 +120,10 @@ func readRuneFromFile(file *os.File) (rune, error) {
 	return utf8.RuneError, nil
 }
 
+var (
+	stdinReader *bufio.Reader
+)
+
 func readRune() rune {
 	if term.IsTerminal(int(os.Stdin.Fd())) {
 		oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
@@ -142,10 +146,12 @@ func readRune() rune {
 			r, _ = utf8.DecodeRune(b[:1+n])
 		}
 		return r
-
 	} else {
-		reader := bufio.NewReader(os.Stdin)
-		r, _, err := reader.ReadRune()
+		// Initialize the reader only once
+		if stdinReader == nil {
+			stdinReader = bufio.NewReader(os.Stdin)
+		}
+		r, _, err := stdinReader.ReadRune()
 		if err != nil {
 			return 0
 		}
